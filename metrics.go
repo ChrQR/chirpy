@@ -1,16 +1,12 @@
-package metrics
+package main
 
 import (
 	"fmt"
 	"net/http"
-	"sync/atomic"
 )
 
-type ApiConfig struct {
-	fileserverHits atomic.Int32
-}
 
-func (cfg *ApiConfig) HandlerMetrics(w http.ResponseWriter, r *http.Request) {
+func (cfg *apiConfig) handlerMetrics(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	w.Header().Add("Content-Type", "text/html")
 	w.Write([]byte(fmt.Sprintf(`
@@ -23,14 +19,14 @@ func (cfg *ApiConfig) HandlerMetrics(w http.ResponseWriter, r *http.Request) {
 		cfg.fileserverHits.Load())))
 }
 
-func (cfg *ApiConfig) MiddlewareMetricsInc(next http.Handler) http.Handler {
+func (cfg *apiConfig) middlewareMetricsInc(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		cfg.fileserverHits.Add(1)
 		next.ServeHTTP(w, r)
 	})
 }
 
-func (cfg *ApiConfig) HandlerMetricsReset(w http.ResponseWriter, r *http.Request) {
+func (cfg *apiConfig) handlerMetricsReset(w http.ResponseWriter, r *http.Request) {
 	cfg.fileserverHits.Store(0)
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("Hits reset to 0"))

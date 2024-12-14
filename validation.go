@@ -1,4 +1,4 @@
-package validation
+package main
 
 import (
 	"encoding/json"
@@ -16,7 +16,7 @@ type cleanedMsg struct {
 	CleanedMsg string `json:"cleaned_body"`
 }
 
-func ValidateChirp(w http.ResponseWriter, r *http.Request) {
+func validateChirp(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 	body := chirp{}
 	err := decoder.Decode(&body)

@@ -1,4 +1,4 @@
-package healthz
+package main
 
 import "net/http"
 
