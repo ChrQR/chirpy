@@ -4,7 +4,7 @@ import (
 	"log"
 	"net/http"
 
-	"gitea.rannes.dev/christian/chirpy/assets/validation"
+	"gitea.rannes.dev/christian/chirpy/validation"
 	"gitea.rannes.dev/christian/chirpy/healthz"
 	"gitea.rannes.dev/christian/chirpy/metrics"
 )

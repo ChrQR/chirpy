@@ -4,12 +4,19 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"slices"
+	"strings"
 )
 
+type chirp struct {
+	Body string `json:"body"`
+}
+
+type cleanedMsg struct {
+	CleanedMsg string `json:"cleaned_body"`
+}
+
 func ValidateChirp(w http.ResponseWriter, r *http.Request) {
-	type chirp struct {
-		Body string `json:"body"`
-	}
 	decoder := json.NewDecoder(r.Body)
 	body := chirp{}
 	err := decoder.Decode(&body)
@@ -20,7 +27,10 @@ func ValidateChirp(w http.ResponseWriter, r *http.Request) {
 		respondWithError(w, 400, "chirp too long")
 		return
 	}
-	validResponse(w)
+	cMsg := censorProfanity(body.Body)
+	writeResponse(w, 200, cleanedMsg{
+		CleanedMsg: cMsg,
+	})
 }
 
 func validResponse(w http.ResponseWriter) {
@@ -55,4 +65,16 @@ func writeResponse(w http.ResponseWriter, status int, responseBody interface{}) 
 		w.WriteHeader(status)
 	}
 	w.Write(body)
+}
+
+func censorProfanity(msg string) string {
+	profList := []string{"kerfuffle", "sharbert", "fornax"}
+	msgSlice := strings.Split(msg, " ")
+	for i, v := range msgSlice {
+		if slices.Contains(profList, strings.ToLower(v)) {
+			msgSlice = slices.Replace(msgSlice, i, i+1, "****")
+		}
+	}
+	censoredMsg := strings.Join(msgSlice, " ")
+	return censoredMsg
 }

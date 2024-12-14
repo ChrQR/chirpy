@@ -1,0 +1,23 @@
+services:
+  db:
+    container_name: postgres
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_USER: chirpy
+      POSTGRES_PASSWORD: chirpy
+      POSTGRES_DB: chirpy
+    volumes:
+      - chirpy-pgdata:/var/lib/postgresql/data
+    ports:
+      - 5432:5432
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 9080:8080
+    depends_on:
+      - db
+
+volumes:
+  chirpy-pgdata:
