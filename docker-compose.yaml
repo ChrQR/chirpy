@@ -1,6 +1,6 @@
 services:
   db:
-    container_name: postgres
+    container_name: chirpy-postgres
     image: postgres
     restart: always
     environment:
@@ -10,7 +10,7 @@ services:
     volumes:
       - chirpy-pgdata:/var/lib/postgresql/data
     ports:
-      - 5432:5432
+      - 5433:5432
   adminer:
     image: adminer
     restart: always

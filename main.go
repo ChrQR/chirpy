@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"sync/atomic"
+	"time"
 
 	"gitea.rannes.dev/christian/chirpy/internal/database"
 	"github.com/joho/godotenv"
@@ -16,6 +17,9 @@ type apiConfig struct {
 	fileserverHits atomic.Int32
 	db             *database.Queries
 	platform       string
+	secret         string
+	tokenExpiry    time.Duration
+	resetExpiry    time.Duration
 }
 
 const PORT = "8080"
@@ -43,6 +47,9 @@ func main() {
 		fileserverHits: atomic.Int32{},
 		db:             dbQueries,
 		platform:       os.Getenv("PLATFORM"),
+		secret:         os.Getenv("SECRET"),
+		tokenExpiry:    1 * time.Hour,
+		resetExpiry:    60 * 24 * time.Hour,
 	}
 
 	mux.Handle("/app/", apiCfg.middlewareMetricsInc(http.StripPrefix("/app/", http.FileServer(http.Dir(".")))))
@@ -51,10 +58,10 @@ func main() {
 	mux.HandleFunc("GET /api/healthz", HandleHealthz)
 	mux.HandleFunc("POST /api/users", apiCfg.handleCreateUser)
 	mux.HandleFunc("POST /api/login", apiCfg.handleLogin)
+	mux.HandleFunc("POST /api/refresh", apiCfg.handleRefreshToken)
 	mux.HandleFunc("POST /api/chirps", apiCfg.handleCreateChirp)
 	mux.HandleFunc("GET /api/chirps", apiCfg.handleGetChirpList)
 	mux.HandleFunc("GET /api/chirps/{chirpId}", apiCfg.handleGetChirp)
 	log.Printf("Server listening on port %s", PORT)
 	log.Fatal(srv.ListenAndServe())
 }
-

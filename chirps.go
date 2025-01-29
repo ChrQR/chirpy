@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"gitea.rannes.dev/christian/chirpy/internal/auth"
 	"gitea.rannes.dev/christian/chirpy/internal/database"
 	"github.com/google/uuid"
 )
@@ -86,9 +87,19 @@ func (cfg *apiConfig) handleCreateChirp(w http.ResponseWriter, r *http.Request) 
 		Body   string    `json:"body"`
 		UserID uuid.UUID `json:"user_id"`
 	}
+	token, err := auth.GetBearerToken(r.Header)
+	if err != nil {
+		respondWithError(w, 401, "Error getting token from header")
+		return
+	}
+	userId, err := auth.ValidateJWT(token, cfg.secret)
+	if err != nil {
+		respondWithError(w, 401, fmt.Sprintf("invalid token: %v", err))
+		return
+	}
 	decoder := json.NewDecoder(r.Body)
 	payload := chirpInsert{}
-	err := decoder.Decode(&payload)
+	err = decoder.Decode(&payload)
 	if err != nil {
 		respondWithError(w, 500, "Error decoding message")
 		return
@@ -98,7 +109,7 @@ func (cfg *apiConfig) handleCreateChirp(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 	cMsg := censorProfanity(payload.Body)
-	newChirp, err := cfg.db.CreateChirp(r.Context(), database.CreateChirpParams{Body: cMsg, UserID: payload.UserID})
+	newChirp, err := cfg.db.CreateChirp(r.Context(), database.CreateChirpParams{Body: cMsg, UserID: userId})
 	if err != nil {
 		log.Printf("There was an error saving your chirp to the db: %s", err)
 	}
